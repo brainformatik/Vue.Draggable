@@ -1,4 +1,5 @@
 import Sortable from "sortablejs";
+import { h } from 'vue';
 import { insertNodeAt, camelize, console, removeNode } from "./util/helper";
 
 function buildAttribute(object, propName, value) {
@@ -81,7 +82,7 @@ function getComponentAttributes($attrs, componentData) {
     attributes = buildAttribute(attributes, name, value);
   };
   const attrs = Object.keys($attrs)
-    .filter(key => key === "id" || key.startsWith("data-"))
+    .filter(key => key === "id" || key === "class" || key.startsWith("data-"))
     .reduce((res, key) => {
       res[key] = $attrs[key];
       return res;
@@ -160,18 +161,18 @@ const draggableComponent = {
     };
   },
 
-  render(h) {
-    const slots = this.$slots.default;
+  render() {
+    const slots = this.$slots.default();
     this.transitionMode = isTransition(slots);
     const { children, headerOffset, footerOffset } = computeChildrenAndOffsets(
       slots,
       this.$slots,
-      this.$scopedSlots
+      this.$slots
     );
     this.headerOffset = headerOffset;
     this.footerOffset = footerOffset;
     const attributes = getComponentAttributes(this.$attrs, this.componentData);
-    return h(this.getTag(), attributes, children);
+    return h(this.getTag(), attributes.attrs, children);
   },
 
   created() {
@@ -282,10 +283,10 @@ const draggableComponent = {
 
     getChildrenNodes() {
       if (this.noneFunctionalComponentMode) {
-        return this.$children[0].$slots.default;
+        return this.$children[0].$slots.default();
       }
-      const rawNodes = this.$slots.default;
-      return this.transitionMode ? rawNodes[0].child.$slots.default : rawNodes;
+      const rawNodes = this.$slots.default();
+      return this.transitionMode ? rawNodes[0].child.$slots.default() : rawNodes;
     },
 
     computeIndexes() {
@@ -378,7 +379,7 @@ const draggableComponent = {
     },
 
     getComponent() {
-      return this.$slots.default[0].componentInstance;
+      return this.$slots.default()[0].componentInstance;
     },
 
     resetTransitionData(index) {
